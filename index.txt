@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ปิติ ประทุมขำ | Financial Advisor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin:0;
+  font-family:'Prompt', sans-serif;
+  background:#0f172a;
+  color:white;
+}
+
+.container {
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
+
+.card {
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+  margin-top:20px;
+}
+
+input, select {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+}
+
+.btn {
+  background:#2563eb;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+  width:100%;
+  margin-top:10px;
+}
+
+.result {
+  margin-top:15px;
+  background:#0ea5e9;
+  padding:15px;
+  border-radius:10px;
+  color:#000;
+}
+
+.profile {
+  display:flex;
+  gap:20px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.profile img {
+  width:150px;
+  border-radius:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- PROFILE -->
+  <div class="card">
+    <div class="profile">
+      <img src="profile.png">
+      <div>
+        <h2>ปิติ ประทุมขำ (หยก)</h2>
+        <p>Financial Advisor</p>
+        <p>ใบอนุญาตเลขที่ 6801067824</p>
+        <p>📞 094-825-9235</p>
+      </div>
+    </div>
+
+    <p style="margin-top:15px;">
+      ✔ วางแผนประกันชีวิตและความคุ้มครอง<br>
+      ✔ วางแผนการเงินระยะยาว<br>
+      ✔ วิเคราะห์กรมธรรม์เดิม
+    </p>
+
+    <blockquote style="color:#94a3b8;">
+      “Energy Group”
+    </blockquote>
+  </div>
+
+  <!-- FORM -->
+  <div class="card">
+    <h2>ประเมินประกันเบื้องต้น</h2>
+
+    <input id="name" placeholder="ชื่อ">
+    <input id="email" type="email" placeholder="อีเมล">
+    <input id="phone" placeholder="เบอร์โทร">
+    <input id="age" type="number" placeholder="อายุ">
+    <input id="income" type="number" placeholder="รายได้/เดือน">
+
+    <button class="btn" onclick="calc()">วิเคราะห์ + บันทึกข้อมูล</button>
+
+    <div id="result" class="result"></div>
+
+    <p style="font-size:12px;color:#94a3b8;">
+      การคำนวณเป็นการประเมินเบื้องต้น ไม่ใช่ข้อเสนออย่างเป็นทางการ
+    </p>
+  </div>
+
+</div>
+
+<script>
+// 📦 ฐานข้อมูลแผน (คุณแก้เพิ่มเองได้)
+const PRODUCTS = [
+  {
+    name: "คุ้มครองล้วน (Term)",
+    minAge: 20,
+    maxAge: 60,
+    rate: 0.0005,
+    note: "เบี้ยต่ำ คุ้มครองสูง"
+  },
+  {
+    name: "สะสมทรัพย์",
+    minAge: 20,
+    maxAge: 55,
+    rate: 0.0009,
+    note: "มีเงินคืน"
+  },
+  {
+    name: "ยูนิตลิงค์",
+    minAge: 20,
+    maxAge: 65,
+    rate: 0.0012,
+    note: "ประกัน + ลงทุน"
+  }
+];
+
+function calc() {
+  let name = document.getElementById("name").value;
+  let email = document.getElementById("email").value;
+  let phone = document.getElementById("phone").value;
+  let age = parseInt(document.getElementById("age").value || 0);
+  let income = parseInt(document.getElementById("income").value || 0);
+
+  if (!name || !email || !phone) {
+    alert("กรุณากรอกข้อมูลให้ครบ");
+    return;
+  }
+
+  let coverage = income * 60;
+
+  let plans = PRODUCTS.filter(p => age >= p.minAge && age <= p.maxAge);
+  if (plans.length === 0) plans = PRODUCTS;
+
+  plans.sort((a,b)=>a.rate - b.rate);
+  let best = plans[0];
+
+  let premium = coverage * best.rate;
+
+  // 🔥 ส่งเข้า Google Sheet
+  fetch("https://script.google.com/macros/s/AKfycbxi_OsqkGC8Xc72A7smSO1f00Jrd9obEWa7v26yZXmeupO44kKMBsgmyzVEomgxt73v/exec", {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      email,
+      phone,
+      age,
+      income,
+      plan: best.name,
+      token: "mysecret123"
+    })
+  });
+
+  document.getElementById("result").innerHTML = `
+    <b>แผนแนะนำ:</b> ${best.name}<br>
+    <b>ความคุ้มครอง:</b> ${coverage.toLocaleString()} บาท<br>
+    <b>เบี้ยประมาณ:</b> ${premium.toFixed(0)} บาท/ปี<br>
+    <small>${best.note}</small>
+  `;
+}
+</script>
+
+</body>
+</html>
