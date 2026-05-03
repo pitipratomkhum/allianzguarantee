@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ปิติ ประทุมขำ | Financial Advisor</title>
+<title>Financial Advisor</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-body {margin:0;font-family:'Prompt',sans-serif;background:#0f172a;color:white;}
+body {margin:0;font-family:'Prompt';background:#0f172a;color:white;}
 .container {max-width:1000px;margin:auto;padding:20px;}
 .card {background:#1e293b;padding:20px;border-radius:15px;margin-top:20px;}
 input,select {width:100%;padding:10px;margin-top:10px;border-radius:8px;border:none;}
@@ -21,96 +21,182 @@ input,select {width:100%;padding:10px;margin-top:10px;border-radius:8px;border:n
 <body>
 <div class="container">
 
+<!-- PROFILE -->
 <div class="card">
   <img src="profile.png" class="avatar">
   <h2>ปิติ ประทุมขำ</h2>
   <p>Financial Advisor</p>
   <p>📞 094-825-9235</p>
+  <p>ใบอนุญาตเลขที่ <b style="color:#22c55e;">6801067824</b></p>
 </div>
 
+<!-- STEP 1 -->
 <div class="card">
-  <h2>ประเมินเบื้องต้น</h2>
+  <h2>ใส่ข้อมูลของท่านเพื่อคำนวณ</h2>
   <input id="name" placeholder="ชื่อ">
   <input id="email" placeholder="Email">
   <input id="phone" placeholder="เบอร์">
   <input id="age" type="number" placeholder="อายุ">
-  <input id="income" type="number" placeholder="รายได้">
-
-  <button class="btn" onclick="calc()">วิเคราะห์ + บันทึก</button>
-  <div id="result" class="result"></div>
+  <input id="income" type="number" placeholder="รายได้/เดือน">
 </div>
 
+<!-- STEP 2 -->
 <div class="card">
-  <h2>สุขภาพ (Pro)</h2>
+  <h2>ท่านสนใจประกันแบบใด</h2>
+  <button class="btn" onclick="showSection('life')">ประกันชีวิต</button>
+  <button class="btn" onclick="showSection('health')">ประกันสุขภาพ</button>
+  <button class="btn" onclick="showSection('saving')">สะสมทรัพย์</button>
+  <button class="btn" onclick="showSection('combo')">สะสมทรัพย์ + สุขภาพ</button>
+</div>
+
+<!-- LIFE -->
+<div class="card" id="life" style="display:none;">
+  <h2>ประกันชีวิต</h2>
+  <p style="color:#94a3b8;">ลดหย่อนภาษีได้สูงสุด 100,000 บาท</p>
+  <button class="btn" onclick="calcLife()">คำนวณ</button>
+  <div id="lifeResult" class="result"></div>
+</div>
+
+<!-- HEALTH -->
+<div class="card" id="health" style="display:none;">
+  <h2>ประกันสุขภาพ</h2>
+  <p style="color:#94a3b8;">ลดหย่อนภาษีได้สูงสุด 25,000 บาท</p>
   <select id="room">
     <option value="2000">ห้อง 2000</option>
     <option value="4000">ห้อง 4000</option>
   </select>
   <button class="btn" onclick="calcHealth()">คำนวณ</button>
-  <div id="health" class="result"></div>
+  <div id="healthResult" class="result"></div>
 </div>
 
-<div class="card">
+<!-- SAVING -->
+<div class="card" id="saving" style="display:none;">
   <h2>สะสมทรัพย์</h2>
-  <input id="years" type="number" placeholder="ปี">
-  <input id="amount" type="number" placeholder="ออม/ปี">
-  <button class="btn" onclick="calcSave()">คำนวณ</button>
-  <div id="save" class="result"></div>
+  <p style="color:#94a3b8;">ใช้วางแผนภาษีและการออมระยะยาว</p>
+  <input id="years" placeholder="ปี">
+  <input id="amount" placeholder="เงิน/ปี">
+  <button class="btn" onclick="calcSaving()">คำนวณ</button>
+  <div id="savingResult" class="result"></div>
+</div>
+
+<!-- COMBO -->
+<div class="card" id="combo" style="display:none;">
+  <h2>สะสมทรัพย์ + สุขภาพ</h2>
+  <p style="color:#94a3b8;">ออมเงิน + คุ้มครองสุขภาพ + ลดภาษี</p>
+  <input id="comboYears" placeholder="ปี">
+  <input id="comboAmount" placeholder="เงิน/ปี">
+  <select id="comboRoom">
+    <option value="2000">ห้อง 2000</option>
+    <option value="4000">ห้อง 4000</option>
+  </select>
+  <button class="btn" onclick="calcCombo()">คำนวณ</button>
+  <div id="comboResult" class="result"></div>
 </div>
 
 </div>
 
 <script>
 
-// 📊 PRODUCTS
-const PRODUCTS = [
- {name:"คุ้มครองล้วน",rate:0.0005},
- {name:"สะสมทรัพย์",rate:0.0009},
- {name:"ยูนิตลิงค์",rate:0.0012}
-];
+const API_URL="https://script.google.com/macros/s/AKfycbxi_OsqkGC8Xc72A7smSO1f00Jrd9obEWa7v26yZXmeupO44kKMBsgmyzVEomgxt73v/exec";
+const TOKEN="mysecret123";
 
-// 🎯 MAIN
-function calc(){
- let name=nameEl("name");
- let email=nameEl("email");
- let phone=nameEl("phone");
- let age=val("age");
- let income=val("income");
-
- let coverage=income*60;
- let best=PRODUCTS[0];
- let premium=coverage*best.rate;
-
- fetch("https://script.google.com/macros/s/AKfycbxi_OsqkGC8Xc72A7smSO1f00Jrd9obEWa7v26yZXmeupO44kKMBsgmyzVEomgxt73v/exec",{
-  method:"POST",
-  body:JSON.stringify({name,email,phone,age,income,plan:best.name})
+// UI
+function showSection(type){
+ ["life","health","saving","combo"].forEach(id=>{
+  document.getElementById(id).style.display="none";
  });
-
- document.getElementById("result").innerHTML=
- `แผน: ${best.name}<br>เบี้ย: ${premium.toFixed(0)}`;
+ document.getElementById(type).style.display="block";
 }
 
-// 🏥 HEALTH
+// TAX
+function calculateTax(income){
+ let tax=0;
+ let b=[{l:150000,r:0},{l:300000,r:0.05},{l:500000,r:0.1},{l:750000,r:0.15},{l:1000000,r:0.2},{l:2000000,r:0.25},{l:5000000,r:0.3},{l:Infinity,r:0.35}];
+ let prev=0;
+ for(let i of b){
+  if(income>prev){
+   let t=Math.min(income,i.l)-prev;
+   tax+=t*i.r;
+   prev=i.l;
+  }
+ }
+ return tax;
+}
+function calcTaxSaving(income,premium){
+ return calculateTax(income)-calculateTax(income-premium);
+}
+
+// LIFE
+function calcLife(){
+ let d=getData();
+ let coverage=d.income*60;
+ let premium=coverage*0.0005;
+ let tax=calcTaxSaving(d.income*12,premium);
+ sendData(d,"ชีวิต");
+ document.getElementById("lifeResult").innerHTML=
+ `ทุน:${coverage.toLocaleString()}<br>เบี้ย:${premium.toFixed(0)}<br>💸${Math.round(tax)}`;
+}
+
+// HEALTH
 function calcHealth(){
- let age=val("age");
- let room=val("room");
- let base=age<40?12000:20000;
+ let d=getData();
+ let base=d.age<40?12000:20000;
+ let room=valNum("room");
  let premium=base*(room/2000);
- document.getElementById("health").innerHTML=`${premium.toFixed(0)} บาท/ปี`;
+ sendData(d,"สุขภาพ");
+ document.getElementById("healthResult").innerHTML=`${premium.toFixed(0)} บาท`;
 }
 
-// 💰 SAVE
-function calcSave(){
- let y=val("years");
- let a=val("amount");
+// SAVING
+function calcSaving(){
+ let d=getData();
+ let y=valNum("years");
+ let a=valNum("amount");
  let total=a*y;
- document.getElementById("save").innerHTML=`${total.toLocaleString()} บาท`;
+ sendData(d,"สะสมทรัพย์");
+ document.getElementById("savingResult").innerHTML=`${total.toLocaleString()} บาท`;
 }
 
-// helper
-function nameEl(id){return document.getElementById(id).value;}
-function val(id){return parseInt(document.getElementById(id).value||0);}
+// COMBO
+function calcCombo(){
+ let d=getData();
+ let y=valNum("comboYears");
+ let a=valNum("comboAmount");
+ let room=valNum("comboRoom");
+
+ let save=a*y;
+ let health=(d.age<40?12000:20000)*(room/2000);
+ let total=a+health;
+ let tax=calcTaxSaving(d.income*12,total);
+
+ sendData(d,"สะสม+สุขภาพ");
+
+ document.getElementById("comboResult").innerHTML=
+ `ออม:${save.toLocaleString()}<br>สุขภาพ:${health.toFixed(0)}<br>💸${Math.round(tax)}`;
+}
+
+// CRM
+function sendData(d,plan){
+ fetch(API_URL,{
+  method:"POST",
+  body:JSON.stringify({...d,plan,token:TOKEN})
+ });
+}
+
+// helpers
+function getData(){
+ return {
+  name:valText("name"),
+  email:valText("email"),
+  phone:valText("phone"),
+  age:valNum("age"),
+  income:valNum("income")
+ };
+}
+function valText(id){return document.getElementById(id).value.trim();}
+function valNum(id){return parseInt(document.getElementById(id).value||0);}
 
 </script>
+
 </body>
 </html>
